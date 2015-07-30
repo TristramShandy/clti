@@ -9,6 +9,7 @@
 #   * support for some action after time has run out
 
 require 'figlet'
+require 'time'
 
 DefaultFontDirectory = "/home/michael/sources/figlet_fonts/contributed"
 DefaultFont = "banner3"
@@ -31,13 +32,25 @@ def clti_display(nr, figlet)
 end
 
 def clti(nr)
-  sec = nr * 60
+  t_start = Time.now
   font = Figlet::Font.new(File.join(DefaultFontDirectory, "#{DefaultFont}.#{FontEnding}"))
   figlet = Figlet::Typesetter.new(font, :smush => false)
-  sec.downto(0) do |i|
-    clti_display i, figlet
-    sleep(1)
+  sec = nr * 60
+  clti_display sec, figlet
+  t_stop = t_start + sec
+
+  while true
+    sleep 0.1
+    t = Time.now
+    break if t > t_stop
+    dt = (t_stop - t).ceil
+    if dt != sec
+      clti_display dt, figlet
+      sec = dt
+    end
   end
+
+  clti_display 0, figlet
 end
 
 if $0 == __FILE__
