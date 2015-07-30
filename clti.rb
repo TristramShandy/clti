@@ -3,10 +3,10 @@
 # clti - the command line timer
 #
 # TODO: 
-#   * clock based countdown
 #   * command line params for Font directory and font
 #   * more fine grained time options
 #   * support for some action after time has run out
+#   * config file
 
 require 'figlet'
 require 'time'
