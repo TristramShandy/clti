@@ -8,56 +8,127 @@
 #   * support for some action after time has run out
 #   * config file
 
+require 'optparse'
 require 'figlet'
 require 'time'
+require 'yaml'
 
 DefaultFontDirectory = "/home/michael/sources/figlet_fonts/contributed"
 DefaultFont = "banner3"
 FontEnding = "flf"
 
-def usage
-  puts "usage: clti time"
-  puts "  a command line timer. Time is given in minutes"
-end
+DefaultConfigLocations = [File.join("~", ".cltirc"), File.join("~", ".config", "clti", "cltirc")]
 
-def show_nr(nr)
-  nr.to_s.rjust(2, '0')
-end
+class Clti
+  attr_reader :font_name, :font_directory, :filename
+  attr_writer :filename
 
-def clti_display(nr, figlet)
-  hrmin, seconds = nr.divmod(60)
-  hours, minutes = hrmin.divmod(60)
-  system "clear"
-  puts figlet["#{show_nr(hours)} : #{show_nr(minutes)} : #{show_nr(seconds)}"]
-end
-
-def clti(nr)
-  t_start = Time.now
-  font = Figlet::Font.new(File.join(DefaultFontDirectory, "#{DefaultFont}.#{FontEnding}"))
-  figlet = Figlet::Typesetter.new(font, :smush => false)
-  sec = nr * 60
-  clti_display sec, figlet
-  t_stop = t_start + sec
-
-  while true
-    sleep 0.1
-    t = Time.now
-    break if t > t_stop
-    dt = (t_stop - t).ceil
-    if dt != sec
-      clti_display dt, figlet
-      sec = dt
-    end
+  def initialize
+    @filename = nil
+    @font_name = nil
+    @font_directory = nil
+    @figlet = nil
   end
 
-  clti_display 0, figlet
+  def read
+    if @filename
+      read_file(@filename)
+    else
+      DefaultConfigLocations.each do |path|
+        config_name = File.expand_path(path)
+        if read_file config_name
+          @filename = config_name
+          break
+        end
+      end
+    end
+
+    unless @filename
+      @font_name ||= DefaultFont
+      @font_directory ||= DefaultFontDirectory
+    end
+
+    @font = Figlet::Font.new(File.expand_path(File.join(@font_directory, "#{@font_name}.#{FontEnding}")))
+    @figlet = Figlet::Typesetter.new(@font, :smush => false)
+  end
+
+  def read_file(filename)
+    return false unless File.exists?(filename)
+
+    doc = YAML.load(File.read(filename))
+    @font_name ||= (doc.include?("font") ? doc["font"] : DefaultFont)
+    @font_directory ||= (doc.include?("font_directory") ? doc["font_directory"] : DefaultFontDirectory)
+    true
+  end
+
+  def set(ar)
+    @sec = ar[0].to_i * 60
+  end
+
+  def start
+    t_start = Time.now
+    display
+    t_stop = t_start + @sec
+
+    while true
+      sleep 0.1
+      t = Time.now
+      break if t > t_stop
+      dt = (t_stop - t).ceil
+      if dt != @sec
+        @sec = dt
+        display
+      end
+    end
+
+    @sec = 0
+    display
+  end
+
+  private
+
+  def show_nr(nr)
+    nr.to_s.rjust(2, '0')
+  end
+
+  def display
+    hrmin, seconds = @sec.divmod(60)
+    hours, minutes = hrmin.divmod(60)
+    system "clear"
+    puts @figlet["#{show_nr(hours)} : #{show_nr(minutes)} : #{show_nr(seconds)}"]
+  end
+end
+
+def setup
+  clti = Clti.new
+  OptionParser.new do |opts|
+    opts.banner = "usage: clti [options] time"
+
+    opts.on("-c file", "--config file", "Set config file") do |filename|
+      clti.filename = filename
+    end
+
+    opts.on("-f font", "--font font", "Set figlet font") do |font|
+      clti.font_name = font
+    end
+
+    opts.on("-d dir", "--font-directory dir", "Set figlet font directory") do |dir|
+      clti.font_directory = dir
+    end
+
+    opts.on_tail("-h", "--help" "Show this message and exit") do
+      puts opts
+      exit 0
+    end
+  end.parse!(ARGV)
+
+  clti.set ARGV
+
+  clti.read
+  clti
 end
 
 if $0 == __FILE__
-  if ARGV.empty?
-    usage
-    exit(0)
-  end
-
-  clti(ARGV[0].to_i)
+  clti = setup
+  clti.start
 end
