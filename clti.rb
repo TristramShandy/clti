@@ -21,7 +21,7 @@ DefaultConfigLocations = [File.join("~", ".cltirc"), File.join("~", ".config", "
 
 class Clti
   attr_reader :font_name, :font_directory, :filename
-  attr_writer :filename
+  attr_writer :filename, :font_name, :font_directory
 
   def initialize
     @filename = nil
