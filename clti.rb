@@ -80,7 +80,7 @@ class Clti
       sleep SleepTime
       if get_key == 'r'
         @t_stop = Time.now + remaining
-        start
+        return
       end
     end
   end
