@@ -16,6 +16,7 @@ require 'yaml'
 DefaultFontDirectory = "/home/michael/sources/figlet_fonts/contributed"
 DefaultFont = "banner3"
 FontEnding = "flf"
+SleepTime = 0.1
 
 DefaultConfigLocations = [File.join("~", ".cltirc"), File.join("~", ".config", "clti", "cltirc")]
 
@@ -65,16 +66,38 @@ class Clti
     @sec = ar[0].to_i * 60
   end
 
+  def get_key
+    key = nil
+    system('stty raw -echo')
+    key = STDIN.read_nonblock(1) rescue nil
+    system('stty -raw -echo')
+    key
+  end
+
+  def pause(remaining)
+    puts "pausing - hit 'r' to resume"
+    while true
+      sleep SleepTime
+      if get_key == 'r'
+        @t_stop = Time.now + remaining
+        start
+      end
+    end
+  end
+
   def start
     t_start = Time.now
     display
-    t_stop = t_start + @sec
+    @t_stop ||= t_start + @sec
 
     while true
-      sleep 0.1
+      sleep SleepTime
       t = Time.now
-      break if t > t_stop
-      dt = (t_stop - t).ceil
+      if get_key == 'p'
+        pause(@t_stop - t)
+      end
+      break if t > @t_stop
+      dt = (@t_stop - t).ceil
       if dt != @sec
         @sec = dt
         display
