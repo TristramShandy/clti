@@ -70,7 +70,7 @@ class Clti
     key = nil
     system('stty raw -echo')
     key = STDIN.read_nonblock(1) rescue nil
-    system('stty -raw -echo')
+    system('stty -raw echo')
     key
   end
 
