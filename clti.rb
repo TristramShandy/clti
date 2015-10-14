@@ -2,11 +2,14 @@
 #
 # clti - the command line timer
 #
+# Return values:
+#  0 success
+#  2 user pressed 'q'
+#
 # TODO: 
-#   * command line params for Font directory and font
-#   * more fine grained time options
-#   * support for some action after time has run out
-#   * config file
+#   * support for some action after time has run out also in config file
+#   * more fine grained time options (e.g. clti 10min 8sec  or so)
+#   * alternative output methods instead of figlet
 
 require 'optparse'
 require 'figlet'
@@ -21,14 +24,15 @@ SleepTime = 0.1
 DefaultConfigLocations = [File.join("~", ".cltirc"), File.join("~", ".config", "clti", "cltirc")]
 
 class Clti
-  attr_reader :font_name, :font_directory, :filename
-  attr_writer :filename, :font_name, :font_directory
+  attr_reader :font_name, :font_directory, :filename, :command
+  attr_writer :filename, :font_name, :font_directory, :command
 
   def initialize
     @filename = nil
     @font_name = nil
     @font_directory = nil
     @figlet = nil
+    @command = nil
   end
 
   def read
@@ -63,7 +67,11 @@ class Clti
   end
 
   def set(ar)
-    @sec = ar[0].to_i * 60
+    if ar[0][-1] == 's'
+      @sec = ar[0].to_i
+    else
+      @sec = ar[0].to_i * 60
+    end
   end
 
   def get_key
@@ -75,12 +83,15 @@ class Clti
   end
 
   def pause(remaining)
-    puts "pausing - hit 'r' to resume"
+    puts "pausing - hit 'r' to resume, 'q' to quit"
     while true
       sleep SleepTime
-      if get_key == 'r'
+      case get_key
+      when 'r'
         @t_stop = Time.now + remaining
         return
+      when 'q'
+        exit 2
       end
     end
   end
@@ -93,8 +104,12 @@ class Clti
     while true
       sleep SleepTime
       t = Time.now
-      if get_key == 'p'
+      case get_key
+      when 'p'
         pause(@t_stop - t)
+        t = Time.now
+      when 'q'
+        exit 2
       end
       break if t > @t_stop
       dt = (@t_stop - t).ceil
@@ -106,6 +121,8 @@ class Clti
 
     @sec = 0
     display
+
+    exec @command if @command
   end
 
   private
@@ -124,8 +141,8 @@ end
 
 def setup
   clti = Clti.new
-  OptionParser.new do |opts|
-    opts.banner = "usage: clti [options] time"
+  opt = OptionParser.new do |opts|
+    opts.banner = "usage: clti [options] time\n  press 'p' to pause, 'q' to quit"
 
     opts.on("-c file", "--config file", "Set config file") do |filename|
       clti.filename = filename
@@ -139,14 +156,23 @@ def setup
       clti.font_directory = dir
     end
 
-    opts.on_tail("-h", "--help" "Show this message and exit") do
+    opts.on("-x command", "--execute command", "Set command to execute after finishing uninterupted") do |command|
+      clti.command = command
+    end
+
+    opts.on_tail("-h", "--help", "Show this message and exit") do
       puts opts
       exit 0
     end
-  end.parse!(ARGV)
+  end
+  opt.parse!(ARGV)
+
+  if ARGV.empty?
+    puts opt
+    exit 0
+  end
 
   clti.set ARGV
-
   clti.read
   clti
 end
