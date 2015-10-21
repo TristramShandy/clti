@@ -7,7 +7,6 @@
 #  2 user pressed 'q'
 #
 # TODO: 
-#   * support for some action after time has run out also in config file
 #   * more fine grained time options (e.g. clti 10min 8sec  or so)
 #   * alternative output methods instead of figlet
 
@@ -63,6 +62,7 @@ class Clti
     doc = YAML.load(File.read(filename))
     @font_name ||= (doc.include?("font") ? doc["font"] : DefaultFont)
     @font_directory ||= (doc.include?("font_directory") ? doc["font_directory"] : DefaultFontDirectory)
+    @command ||= doc["command"]
     true
   end
 
