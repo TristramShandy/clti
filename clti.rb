@@ -14,6 +14,12 @@ require 'optparse'
 require 'figlet'
 require 'time'
 require 'yaml'
+begin
+  require 'chronic_duration'
+  UseChronicDuration = true
+rescue LoadError
+  UseChronicDuration = false
+end
 
 DefaultFontDirectory = "/home/michael/sources/figlet_fonts/contributed"
 DefaultFont = "banner3"
@@ -21,6 +27,23 @@ FontEnding = "flf"
 SleepTime = 0.1
 
 DefaultConfigLocations = [File.join("~", ".cltirc"), File.join("~", ".config", "clti", "cltirc")]
+
+def simple_time_parser(ar)
+  duration = 0
+  nr = (ar.size + 1) / 2
+  nr.times do |i|
+    d = ar[2 * i].to_i
+    case ar[2 * i + 1].to_s.downcase
+    when /^h/ then duration += 3600 * d
+    when /^m/ then duration += 60 * d
+    when /^s/ then duration += d
+    else
+      duration += d
+    end
+  end
+
+  duration
+end
 
 class Clti
   attr_reader :font_name, :font_directory, :filename, :command
@@ -67,10 +90,11 @@ class Clti
   end
 
   def set(ar)
-    if ar[0][-1] == 's'
-      @sec = ar[0].to_i
+    time_str = ar.join(' ')
+    if UseChronicDuration
+      @sec = ChronicDuration.parse time_str
     else
-      @sec = ar[0].to_i * 60
+      @sec = simple_time_parser(ar)
     end
   end
 
