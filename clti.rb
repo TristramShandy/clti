@@ -7,13 +7,17 @@
 #  2 user pressed 'q'
 #
 # TODO: 
-#   * more fine grained time options (e.g. clti 10min 8sec  or so)
 #   * alternative output methods instead of figlet
 
 require 'optparse'
-require 'figlet'
 require 'time'
 require 'yaml'
+begin
+  require 'figlet'
+  UseFiglet = true
+rescue LoadError
+  UseFiglet = false
+end
 begin
   require 'chronic_duration'
   UseChronicDuration = true
@@ -70,13 +74,15 @@ class Clti
       end
     end
 
-    unless @filename
-      @font_name ||= DefaultFont
-      @font_directory ||= DefaultFontDirectory
-    end
+    if UseFiglet
+      unless @filename
+        @font_name ||= DefaultFont
+        @font_directory ||= DefaultFontDirectory
+      end
 
-    @font = Figlet::Font.new(File.expand_path(File.join(@font_directory, "#{@font_name}.#{FontEnding}")))
-    @figlet = Figlet::Typesetter.new(@font, :smush => false)
+      @font = Figlet::Font.new(File.expand_path(File.join(@font_directory, "#{@font_name}.#{FontEnding}")))
+      @figlet = Figlet::Typesetter.new(@font, :smush => false)
+    end
   end
 
   def read_file(filename)
@@ -159,7 +165,13 @@ class Clti
     hrmin, seconds = @sec.divmod(60)
     hours, minutes = hrmin.divmod(60)
     system "clear"
-    puts @figlet["#{show_nr(hours)} : #{show_nr(minutes)} : #{show_nr(seconds)}"]
+    str = "#{show_nr(hours)} : #{show_nr(minutes)} : #{show_nr(seconds)}"
+    if UseFiglet
+      puts @figlet[str]
+    else
+      system "clear" or system "cls" # to be a bit more portable
+      puts str
+    end
   end
 end
 
