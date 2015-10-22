@@ -7,7 +7,7 @@
 #  2 user pressed 'q'
 #
 # TODO: 
-#   * alternative output methods instead of figlet
+#   * Nothing
 
 require 'optparse'
 require 'time'
