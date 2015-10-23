@@ -97,6 +97,7 @@ class Clti
 
   def set(ar)
     time_str = ar.join(' ')
+    time_str << ' m' if ar.size == 1 # default is time in minutes
     if UseChronicDuration
       @sec = ChronicDuration.parse time_str
     else
