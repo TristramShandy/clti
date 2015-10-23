@@ -42,7 +42,7 @@ def simple_time_parser(ar)
     when /^m/ then duration += 60 * d
     when /^s/ then duration += d
     else
-      duration += d
+      duration += 60 * d
     end
   end
 
