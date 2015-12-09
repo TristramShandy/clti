@@ -7,14 +7,15 @@ to make an easy to use, simple timer with no frills.
 
 ##Quick start
 
-You need to have ruby installed. Then just put the *clti* file somewhere in your
+You need to have ruby installed. Then just put the `clti` file somewhere in your
 path. Then you can do:
 
     clti 5                    # runs for 5 minutes, then stop
     clti 3 m 5 s              # runs for 3 minutes and 5 seconds
     clti -x 'play ping.ogg' 3 # runs for 3 minutes, then play the given sound file
+    clti -h                   # short description of the command line parameters
 
-When clti runs, you can press `p` to pause and then enter `r` to resume.
+When `clti` runs, you can press `p` to pause and then enter `r` to resume.
 
 At any time you can enter `q` to quit.
 
@@ -40,7 +41,7 @@ is used to parse the time durations. Then you have more flexibility with the
 input:
 
     5                       # if only a number is given, it defaults to minutes
-    15s                     # the number and its don't have to be separated by whitespace
+    15s                     # the number and its unit don't have to be separated by whitespace
     2 minutes and 8 seconds # fill words are allowed
     2 wks 1 day 1 hr        # more time units for longer timers
 
