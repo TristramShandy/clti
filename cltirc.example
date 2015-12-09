@@ -1,0 +1,4 @@
+---
+font: banner3
+command: "echo 'done'"
+font_directory: "/home/michael/sources/figlet_fonts/contributed"
