@@ -61,6 +61,6 @@ file could look like
 
     ---
     font: banner3
-    font\_directory: '~/fonts/figlet\_fonts/contributed'
+    font_directory: '~/fonts/figlet_fonts/contributed'
     command: "echo 'done'"
 
